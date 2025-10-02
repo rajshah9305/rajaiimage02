@@ -14,7 +14,7 @@ export function useImageGeneration() {
   const generateImages = useCallback(async (params: GenerationParams, count: number = 1) => {
     setStatus({ isGenerating: true, progress: 0 });
 
-    let progressInterval: NodeJS.Timeout;   // ← OUTSIDE try/catch
+    let progressInterval: NodeJS.Timeout | null = null;   // ← nullable
 
     try {
       const startTime = Date.now();
@@ -25,7 +25,7 @@ export function useImageGeneration() {
 
       const imageUrls = await PollinationsAPI.generateMultipleImages(params, count);
 
-      clearInterval(progressInterval);
+      if (progressInterval) clearInterval(progressInterval);
       setStatus({ isGenerating: false, progress: 100 });
 
       const newImages: GeneratedImage[] = imageUrls.map(url => ({
@@ -39,12 +39,24 @@ export function useImageGeneration() {
       setGeneratedImages(prev => [...newImages, ...prev]);
 
       const generationTime = ((Date.now() - startTime) / 1000).toFixed(1);
-      toast({ title: 'Images Generated Successfully! 🎨', description: `${count} image${count > 1 ? 's' : ''} generated in ${generationTime}s` });
+      toast({
+        title: 'Images Generated Successfully! 🎨',
+        description: `${count} image${count > 1 ? 's' : ''} generated in ${generationTime}s`,
+      });
+
       return newImages;
     } catch (error) {
-      clearInterval(progressInterval);        // ← now valid
-      setStatus({ isGenerating: false, progress: 0, error: error instanceof Error ? error.message : 'Generation failed' });
-      toast({ title: 'Generation Failed', description: error instanceof Error ? error.message : 'Please try again', variant: 'destructive' });
+      if (progressInterval) clearInterval(progressInterval);   // ← safe now
+      setStatus({
+        isGenerating: false,
+        progress: 0,
+        error: error instanceof Error ? error.message : 'Generation failed',
+      });
+      toast({
+        title: 'Generation Failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+        variant: 'destructive',
+      });
       throw error;
     }
   }, [toast]);
