@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ASPECT_RATIOS } from '@/lib/constants';
+import { Button } from "@/components/ui/button";
 import { Settings, Wand2, Shield, Zap } from 'lucide-react';
 
 interface AdvancedSettingsProps {
